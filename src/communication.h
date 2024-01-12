@@ -9,7 +9,7 @@
 #include <QByteArray>
 #include <QShortcut>
 #include <QKeySequence>
-#include <iostream>
+
 class Communication : public QObject
 {
     Q_OBJECT
@@ -17,7 +17,8 @@ class Communication : public QObject
     Q_PROPERTY(QObject* plate READ getPlate WRITE setPlate  NOTIFY plateChanged)
     Q_PROPERTY(double rect_X READ rect_X WRITE setrect_X NOTIFY rect_XChanged)
     Q_PROPERTY(double rect_Y READ rect_Y WRITE setrect_Y NOTIFY rect_YChanged)
-    Q_PROPERTY(QString command READ command WRITE setCommand NOTIFY commandChanged )
+    Q_PROPERTY(double command_X READ command_X WRITE setCommand_X NOTIFY command_XChanged )
+    Q_PROPERTY(double command_Y READ command_Y WRITE setCommand_Y NOTIFY command_YChanged )
 public:
     explicit Communication(QObject *parent = nullptr);
 
@@ -34,11 +35,15 @@ public:
 
 
 
+    double command_X() const;
+    void setCommand_X(double newCommand_X);
 
-    QString command() const;
-    void setCommand(const QString &newCommand);
+    double command_Y() const;
+    void setCommand_Y(double newCommand_Y);
+
 
 public slots:
+    bool connectServer(QString ipWithPort);
     void sendDirection(int c);
     void sendLocation(int x, int y);
     void readFromServer();
@@ -52,14 +57,19 @@ signals:
     void rect_YChanged();
 
 
-    void commandChanged();
+
+
+    void command_XChanged();
+
+    void command_YChanged();
 
 private:
     QTcpSocket *TCPSocket;
     double m_rect_X=0;
     double m_rect_Y=0;
 
-    QString m_command;
+    double m_command_X;
+    double m_command_Y;
 };
 
 #endif // COMMUNICATION_H

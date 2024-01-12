@@ -4,9 +4,7 @@ Communication::Communication(QObject *parent)
     : QObject{parent}
 {
     TCPSocket = new QTcpSocket();
-    TCPSocket->connectToHost("10.1.254.146", 8080);//10.1.244.58
-    TCPSocket->write("CONNECT_DESKTOP");
-    connect(TCPSocket,SIGNAL(readyRead()),this,SLOT(readFromServer()));
+
 }
 
 void Communication::readFromServer()
@@ -52,7 +50,7 @@ void Communication::readFromServer()
                         double abs_tilt_x = std::abs(mapped_x);
                         double abs_tilt_y = std::abs(mapped_y);
                         double larger_tilt = (abs_tilt_x > abs_tilt_y) ? abs_tilt_x : abs_tilt_y;
-                        double mapped_z = map(larger_tilt, 0, 10, 19.1, 21);
+                        double mapped_z = map(larger_tilt, 0, 10, 19.1, 21.5);
                         QString mapped_z_str = QString::number(mapped_z);
                         qDebug() <<larger_tilt << "Mapped z =" << mapped_z_str;
                         //
@@ -104,21 +102,19 @@ void Communication::readFromServer()
                     setrect_Y(map(received_y,0,400,0,250));
 
             }
-                else if (parts.size() == 3&& parts[0] == "SET_BALANCE_COORD") {
+                else if (parts.size() == 3&& parts[0] == "BALANCE_COORD") {
                     QString commandX_str = parts[1];
                     QString commandY_str = parts[2];
-                 /*   if (moveCommand == "MOVE_LEFT"){
-                        setCommand("Left Command");
+                    bool xConversionOK, yConversionOK;
+                    double receivedCommand_x = commandX_str.toDouble(&xConversionOK);
+                    double receivedCommand_y = commandY_str.toDouble(&yConversionOK);
+                    qDebug() << "set coordx =" << commandX_str;
+                    qDebug() << "set coordy =" << commandY_str;
+                    if (xConversionOK && yConversionOK){
+                        setCommand_X(map(receivedCommand_x,0,300,0,330));
+                        setCommand_Y(map(receivedCommand_y,0,400,0,250));
                     }
-                    else if (moveCommand == "MOVE_RIGHT"){
-                        setCommand("Right Command");
-                    }
-                    else if (moveCommand == "MOVE_FORWARD"){
-                        setCommand("Forward Command");
-                    }
-                    else if (moveCommand == "MOVE_BACKWARD"){
-                        setCommand("Backward Command");
-                    }*/
+
                 }
         }
     }
@@ -239,14 +235,62 @@ void Communication::setrect_Y(double newRect_Y)
 
 
 
-QString Communication::command() const
+
+
+double Communication::command_X() const
 {
-    return m_command;
+    return m_command_X;
 }
 
-void Communication::setCommand(const QString &newCommand)
+void Communication::setCommand_X(double newCommand_X)
 {
-
-    m_command = newCommand;
-    emit commandChanged();
+    if (qFuzzyCompare(m_command_X, newCommand_X))
+        return;
+    m_command_X = newCommand_X;
+    emit command_XChanged();
 }
+
+double Communication::command_Y() const
+{
+    return m_command_Y;
+}
+
+void Communication::setCommand_Y(double newCommand_Y)
+{
+    if (qFuzzyCompare(m_command_Y, newCommand_Y))
+        return;
+    m_command_Y = newCommand_Y;
+    emit command_YChanged();
+}
+
+bool Communication::connectServer(QString ipWithPort)
+{
+    // Splitting the IP address and port
+    QStringList parts = ipWithPort.split(':');
+
+    if (parts.size() != 2) {
+        // Handle error: invalid format
+        qDebug() << "Invalid IP address format. Use 'ip:port'.";
+        return false;
+    }
+
+    QString ip = parts[0];
+    int port = parts[1].toInt();
+
+    // Connect to the server asynchronously
+    TCPSocket->connectToHost(ip, port);
+
+    // Wait for the connection with a timeout of 5 seconds (adjust as needed)
+    if (TCPSocket->waitForConnected(100)) {
+        TCPSocket->write("CONNECT_DESKTOP");
+        connect(TCPSocket, SIGNAL(readyRead()), this, SLOT(readFromServer()));
+        return true; // Connection successful
+    } else {
+        qDebug() << "Failed to connect to the server within the timeout.";
+        return false; // Connection failed
+    }
+}
+
+
+
+

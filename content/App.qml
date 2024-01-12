@@ -5,7 +5,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick.Controls
-import BallOnPlateModel
+import Quick3DAssets.BallOnPlateModel
 import QtQuick3D.Physics
 import QtCharts
 
@@ -272,7 +272,7 @@ Window {
 
         Label {
             id:command
-            text: Communication.command
+            text: "Commands"
             anchors.top: action.bottom
             anchors.horizontalCenter: action.horizontalCenter
             anchors.bottomMargin: 20
@@ -280,21 +280,7 @@ Window {
             font.pointSize: 12
             Connections {
                 target: Communication
-                onCommandChanged: {
-                    command.text = Communication.command;
-                    if (Communication.command === "Right Command") {
-                                    nodeRect.x = nodeRect.x + 22;
-                                }
-                    else if (Communication.command === "Left Command") {
-                                    nodeRect.x = nodeRect.x - 22;
-                                }
-                    else if (Communication.command === "Forward Command") {
-                                    nodeRect.y = nodeRect.y + 12.5;
-                                }
-                    else if (Communication.command === "Backward Command") {
-                                    nodeRect.y = nodeRect.y - 12.5;
-                                }
-                }
+
 
             }
         }
@@ -316,7 +302,19 @@ Window {
                 radius: 7.5
                 color: "red"
                 visible: false
+                Connections {
+                    target: Communication
+                    onCommand_XChanged: {
+                        visible= true;
+                        nodeRect.x = Communication.command_X;
 
+
+                    }
+                    onCommand_YChanged: {
+                        visible= true;
+                        nodeRect.y = Communication.command_Y;
+                    }
+                }
             }
 
             Rectangle {
@@ -341,11 +339,16 @@ Window {
             }
 
             MouseArea {
-                anchors.fill: parent
-                anchors.leftMargin: 0
-                anchors.rightMargin: 0
-                anchors.topMargin: 0
-                anchors.bottomMargin: 0
+                anchors.verticalCenter: nodeRect.verticalCenter
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: nodeRect.bottom
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: -15
+                anchors.rightMargin: -330
+                anchors.topMargin: -15
+                anchors.bottomMargin: -250
+                anchors.horizontalCenter: nodeRect.horizontalCenter
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     // Calculate the position relative to the parent
@@ -355,6 +358,7 @@ Window {
                     console.log("Clicked at:", clickX, clickY);
                     console.log("Clicked at:", mouseX, mouseY);
                     Communication.sendLocation(clickX,clickY)
+                    command.text = "Set Coordinate Command Sent";
                     // Toggle visibility and set the position of the rectangle
                     nodeRect.visible = true;
                     nodeRct.visible = true;
@@ -386,9 +390,9 @@ Window {
             text: "UP"
             display: AbstractButton.TextOnly
 
-            Connections {
-                target: upButton
-                onClicked: Communication.sendDirection(5)
+            onClicked: {
+                Communication.sendDirection(5);
+                command.text = "MOVE UP Command Sent";
             }
         }
 
@@ -399,9 +403,9 @@ Window {
             text: qsTr("DOWN")
             display: AbstractButton.TextOnly
 
-            Connections {
-                target: downButton
-                onClicked: Communication.sendDirection(2)
+            onClicked: {
+                Communication.sendDirection(2);
+                command.text = "MOVE DOWN Command Sent";
             }
         }
 
@@ -412,9 +416,9 @@ Window {
             text: qsTr("LEFT")
             display: AbstractButton.TextOnly
 
-            Connections {
-                target: leftButton
-                onClicked: Communication.sendDirection(1)
+            onClicked: {
+                Communication.sendDirection(1);
+                command.text = "MOVE LEFT Command Sent";
             }
         }
 
@@ -425,9 +429,9 @@ Window {
             text: qsTr("RIGHT")
             display: AbstractButton.TextOnly
 
-            Connections {
-                target: rigthButton
-                onClicked: Communication.sendDirection(3)
+            onClicked: {
+                Communication.sendDirection(3);
+                command.text = "MOVE RIGHT Command Sent";
             }
         }
 
@@ -486,8 +490,7 @@ Window {
                           var distanceX = Math.abs(Communication.map(Communication.rect_X,0,330,0,300) - Communication.map(nodeRect.x,0,330,0,300))
                           var distanceY = Math.abs(Communication.map(Communication.rect_Y,0,250,0,400) - Communication.map(nodeRect.y,0,250,0,400))
                           var distance= Math.sqrt( distanceX * distanceX + distanceY * distanceY)
-                          console.log(distance)
-                          console.log(counterObject.counter)
+
                           errorLineSeries.append(counterObject.counter, distance);
                           counterObject.setCounter(counterObject.counter + 1);
                       }
@@ -523,12 +526,52 @@ Window {
                     axisY: axisyError
                   }
                 }
+                TextField {
+                    id: userInputField
+                    y: 964
+                    width: 200
+                    height: 40
+                    anchors.horizontalCenterOffset: -84
+                    placeholderText: "Enter IP here"
+                    anchors {
+                        bottom: parent.bottom
+                        horizontalCenter: parent.horizontalCenter
+                        bottomMargin: 76
+                    }
+                }
+
+
+                Button {
+                    id: sendButton
+                    y: 964
+                    width: 150
+                    height: 40
+                    text: "Connect Server"
+                    anchors.horizontalCenterOffset: 106
+                    anchors {
+                        bottom: parent.bottom
+                        horizontalCenter: parent.horizontalCenter
+                        bottomMargin: 76
+                    }
+
+                    onClicked: {
+                        var userCommand = userInputField.text.trim();
+                        if (userCommand.length > 0) {
+                            if(Communication.connectServer(userCommand) == true){
+                                command.text = "Connected to: " + userCommand;
+                            } else {
+                                command.text = "Failed to connect to: " + userCommand;
+                            }
+
+                        }
+                    }
+                }
             }
 
 }
 
 /*##^##
 Designer {
-    D{i:0}D{i:13;invisible:true}D{i:50}
+    D{i:0}D{i:13;invisible:true}D{i:43}
 }
 ##^##*/
