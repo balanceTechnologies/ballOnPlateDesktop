@@ -339,16 +339,7 @@ Window {
             }
 
             MouseArea {
-                anchors.verticalCenter: nodeRect.verticalCenter
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: nodeRect.bottom
-                anchors.bottom: parent.bottom
-                anchors.leftMargin: -15
-                anchors.rightMargin: -330
-                anchors.topMargin: -15
-                anchors.bottomMargin: -250
-                anchors.horizontalCenter: nodeRect.horizontalCenter
+                anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     // Calculate the position relative to the parent
@@ -445,7 +436,6 @@ Window {
             anchors.leftMargin: -97
             anchors.rightMargin: -97
             anchors.bottomMargin: -90
-            anchors.horizontalCenter: action.horizontalCenter
             font.pointSize: 14
             anchors.verticalCenterOffset: -443
             anchors.horizontalCenterOffset: -1
